@@ -54,6 +54,7 @@ NSString  *const SlideNavigationControllerDidReveal = @"SlideNavigationControlle
 #define MENU_SHADOW_RADIUS 10
 #define MENU_SHADOW_OPACITY 1
 #define MENU_DEFAULT_SLIDE_OFFSET 60
+#define MENU_DEFAULT_WIDTH 260
 #define MENU_FAST_VELOCITY_FOR_SWIPE_FOLLOW_DIRECTION 1200
 #define STATUS_BAR_HEIGHT 20
 #define NOTIFICATION_USER_INFO_MENU_LEFT @"left"
@@ -121,8 +122,7 @@ static SlideNavigationController *singletonInstance;
 	
 	self.menuRevealAnimationDuration = MENU_SLIDE_ANIMATION_DURATION;
 	self.menuRevealAnimationOption = MENU_SLIDE_ANIMATION_OPTION;
-	self.landscapeSlideOffset = MENU_DEFAULT_SLIDE_OFFSET;
-	self.portraitSlideOffset = MENU_DEFAULT_SLIDE_OFFSET;
+    self.menuWidth = MENU_DEFAULT_WIDTH;
 	self.panGestureSideOffset = 0;
 	self.avoidSwitchingToSameClassViewController = YES;
 	self.enableShadow = YES;
@@ -483,8 +483,7 @@ static SlideNavigationController *singletonInstance;
 						options:self.menuRevealAnimationOption
 					 animations:^{
 						 CGRect rect = self.view.frame;
-						 CGFloat width = self.horizontalSize;
-						 rect.origin.x = (menu == MenuLeft) ? (width - self.slideOffset) : ((width - self.slideOffset )* -1);
+						 rect.origin.x = (menu == MenuLeft) ? self.menuWidth : (self.menuWidth* -1);
 						 [self moveHorizontallyToLocation:rect.origin.x];
 					 }
 					 completion:^(BOOL finished) {
@@ -553,8 +552,8 @@ static SlideNavigationController *singletonInstance;
 - (void)updateMenuAnimation:(Menu)menu
 {
 	CGFloat progress = (menu == MenuLeft)
-		? (self.horizontalLocation / (self.horizontalSize - self.slideOffset))
-		: (self.horizontalLocation / ((self.horizontalSize - self.slideOffset) * -1));
+		? (self.horizontalLocation / self.menuWidth)
+		: (self.horizontalLocation / (self.menuWidth * -1));
 	
 	[self.menuRevealAnimator animateMenu:menu withProgress:progress];
 }
@@ -675,13 +674,6 @@ static SlideNavigationController *singletonInstance;
 		viewController.navigationItem.rightBarButtonItem = [self barButtonItemForMenu:MenuRight];
 }
 
-- (CGFloat)slideOffset
-{
-	return (UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation))
-		? self.landscapeSlideOffset
-		: self.portraitSlideOffset;
-}
-
 #pragma mark - IBActions -
 
 - (void)leftMenuSelected:(id)sender
@@ -796,7 +788,7 @@ static SlideNavigationController *singletonInstance;
 		}
 		else
 		{
-			if (currentXOffset < (self.horizontalSize - self.slideOffset)/2)
+			if (currentXOffset < self.menuWidth/2)
 				[self closeMenuWithCompletion:nil];
 			else
 				[self openMenu:(currentX > 0) ? MenuLeft : MenuRight withCompletion:nil];
@@ -808,7 +800,7 @@ static SlideNavigationController *singletonInstance;
 {
 	if ([self shouldDisplayMenu:MenuRight forViewController:self.topViewController])
 	{
-		return (self.horizontalSize - self.slideOffset)  * -1;
+		return self.menuWidth  * -1;
 	}
 	
 	return 0;
@@ -818,7 +810,7 @@ static SlideNavigationController *singletonInstance;
 {
 	if ([self shouldDisplayMenu:MenuLeft forViewController:self.topViewController])
 	{
-		return self.horizontalSize - self.slideOffset;
+		return self.menuWidth;
 	}
 	
 	return 0;
